@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learning Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .word {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 2px 4px;
+            margin: 0 1px;
+        }
+        .word:hover {
+            background-color: #e2e8f0;
+        }
+        .known {
+            background-color: #bbf7d0;
+        }
+        .forgotten {
+            background-color: #fed7aa;
+        }
+        .text-display {
+            line-height: 2;
+            font-size: 1.1rem;
+        }
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+        .word-actions {
+            display: inline-flex;
+            gap: 2px;
+            margin-left: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .word:hover .word-actions {
+            opacity: 1;
+        }
+        .word-actions button {
+            padding: 0 2px;
+            font-size: 0.7rem;
+            border-radius: 2px;
+        }
+        #textInput {
+            min-height: 150px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold text-indigo-700 mb-2">English Learning Control</h1>
+            <p class="text-lg text-gray-600">Track your English vocabulary progress and practice effectively</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - Text Management -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Section 1: Add New Text -->
+                <section class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add New Text</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="textName" class="block text-sm font-medium text-gray-700 mb-1">Text Name</label>
+                            <input type="text" id="textName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label for="textInput" class="block text-sm font-medium text-gray-700 mb-1">Paste English Text</label>
+                            <textarea id="textInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                        </div>
+                        <button id="saveTextBtn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center">
+                            <i class="fas fa-save mr-2"></i> Save Text
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Section 2: Saved Texts -->
+                <section class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Saved Texts</h2>
+                    <div class="space-y-4">
+                        <div id="savedTextsList" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <!-- Saved texts will appear here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Text Viewer -->
+                <section id="textViewerSection" class="bg-white rounded-xl shadow-md p-6 hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 id="currentTextTitle" class="text-2xl font-semibold text-gray-800"></h2>
+                        <button id="closeTextViewer" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <div id="textDisplay" class="text-display"></div>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button id="translateSelection" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg hover:bg-blue-200 flex items-center">
+                            <i class="fas fa-language mr-2"></i> Translate Selection
+                        </button>
+                        <button id="markAsKnown" class="bg-green-100 text-green-800 px-3 py-1 rounded-lg hover:bg-green-200 flex items-center">
+                            <i class="fas fa-check mr-2"></i> Mark as Known
+                        </button>
+                        <button id="markAsForgotten" class="bg-orange-100 text-orange-800 px-3 py-1 rounded-lg hover:bg-orange-200 flex items-center">
+                            <i class="fas fa-exclamation mr-2"></i> Mark as Forgotten
+                        </button>
+                    </div>
+                    <div id="translationResult" class="hidden bg-gray-100 p-3 rounded-lg"></div>
+                </section>
+            </div>
+
+            <!-- Right Column - Stats and Practice -->
+            <div class="space-y-8">
+                <!-- Section 4: Vocabulary Stats -->
+                <section class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Vocabulary Progress</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm font-medium text-gray-700">Learning Progress</span>
+                                <span id="progressPercentage" class="text-sm font-medium text-gray-700">0%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div id="progressBar" class="progress-bar bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-600">Known Words</p>
+                                <p id="knownCount" class="text-2xl font-bold text-green-600">0</p>
+                            </div>
+                            <div class="bg-orange-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-600">Forgotten Words</p>
+                                <p id="forgottenCount" class="text-2xl font-bold text-orange-600">0</p>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-600">Total Words</p>
+                                <p id="totalCount" class="text-2xl font-bold text-blue-600">0</p>
+                            </div>
+                            <div class="bg-purple-50 p-3 rounded-lg">
+                                <p class="text-sm text-gray-600">Texts Saved</p>
+                                <p id="textsCount" class="text-2xl font-bold text-purple-600">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Word Inventory -->
+                <section class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Word Inventory</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="searchWord" placeholder="Search words..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <button id="searchBtn" class="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div class="max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Word</th>
+                                        <th class="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="wordInventory" class="bg-white divide-y divide-gray-200">
+                                    <!-- Words will appear here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section 6: Practice Words -->
+                <section class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Practice Words</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="wordCount" class="block text-sm font-medium text-gray-700 mb-1">Number of Words to Practice</label>
+                            <input type="number" id="wordCount" min="1" value="10" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <button id="generatePracticeBtn" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center">
+                            <i class="fas fa-dumbbell mr-2"></i> Generate Practice List
+                        </button>
+                        <div id="practiceList" class="hidden space-y-3 mt-4">
+                            <h3 class="text-lg font-medium text-gray-800">Your Practice Words:</h3>
+                            <div id="practiceWords" class="flex flex-wrap gap-2"></div>
+                            <div class="flex space-x-2 mt-3">
+                                <button id="markAllKnown" class="flex-1 bg-green-100 text-green-800 px-3 py-1 rounded-lg hover:bg-green-200">
+                                    Mark All as Known
+                                </button>
+                                <button id="shufflePractice" class="flex-1 bg-gray-100 text-gray-800 px-3 py-1 rounded-lg hover:bg-gray-200">
+                                    Shuffle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let texts = JSON.parse(localStorage.getItem('englishTexts')) || [];
+        let wordInventory = JSON.parse(localStorage.getItem('wordInventory')) || {};
+        let selectedText = null;
+        let selectedWord = null;
+        let selectedRange = null;
+
+        // DOM Elements
+        const saveTextBtn = document.getElementById('saveTextBtn');
+        const textNameInput = document.getElementById('textName');
+        const textInput = document.getElementById('textInput');
+        const savedTextsList = document.getElementById('savedTextsList');
+        const textViewerSection = document.getElementById('textViewerSection');
+        const currentTextTitle = document.getElementById('currentTextTitle');
+        const textDisplay = document.getElementById('textDisplay');
+        const closeTextViewer = document.getElementById('closeTextViewer');
+        const markAsKnown = document.getElementById('markAsKnown');
+        const markAsForgotten = document.getElementById('markAsForgotten');
+        const translateSelection = document.getElementById('translateSelection');
+        const translationResult = document.getElementById('translationResult');
+        const knownCount = document.getElementById('knownCount');
+        const forgottenCount = document.getElementById('forgottenCount');
+        const totalCount = document.getElementById('totalCount');
+        const textsCount = document.getElementById('textsCount');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercentage = document.getElementById('progressPercentage');
+        const wordInventoryTable = document.getElementById('wordInventory');
+        const searchWord = document.getElementById('searchWord');
+        const searchBtn = document.getElementById('searchBtn');
+        const wordCount = document.getElementById('wordCount');
+        const generatePracticeBtn = document.getElementById('generatePracticeBtn');
+        const practiceList = document.getElementById('practiceList');
+        const practiceWords = document.getElementById('practiceWords');
+        const markAllKnown = document.getElementById('markAllKnown');
+        const shufflePractice = document.getElementById('shufflePractice');
+
+        // Initialize the app
+        function init() {
+            renderSavedTexts();
+            updateStats();
+            renderWordInventory();
+            
+            // Event listeners
+            saveTextBtn.addEventListener('click', saveText);
+            closeTextViewer.addEventListener('click', closeText);
+            markAsKnown.addEventListener('click', () => markWord('known'));
+            markAsForgotten.addEventListener('click', () => markWord('forgotten'));
+            translateSelection.addEventListener('click', translateWord);
+            searchBtn.addEventListener('click', searchWords);
+            generatePracticeBtn.addEventListener('click', generatePracticeList);
+            markAllKnown.addEventListener('click', markAllPracticeWordsAsKnown);
+            shufflePractice.addEventListener('click', shufflePracticeWords);
+            
+            // Text selection handling
+            textDisplay.addEventListener('mouseup', handleTextSelection);
+            
+            // Enable speech synthesis
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = function() {
+                    // Voices loaded
+                };
+            }
+        }
+
+        // Save text to storage
+        function saveText() {
+            const name = textNameInput.value.trim();
+            const content = textInput.value.trim();
+            
+            if (!name || !content) {
+                alert('Please enter both a name and text content');
+                return;
+            }
+            
+            // Check if name already exists
+            if (texts.some(text => text.name === name)) {
+                alert('A text with this name already exists');
+                return;
+            }
+            
+            const newText = {
+                name,
+                content,
+                date: new Date().toISOString()
+            };
+            
+            texts.push(newText);
+            localStorage.setItem('englishTexts', JSON.stringify(texts));
+            
+            // Clear inputs
+            textNameInput.value = '';
+            textInput.value = '';
+            
+            // Update UI
+            renderSavedTexts();
+            updateStats();
+            
+            // Extract words and add to inventory
+            extractWords(content);
+        }
+
+        // Render saved texts list
+        function renderSavedTexts() {
+            savedTextsList.innerHTML = '';
+            
+            if (texts.length === 0) {
+                savedTextsList.innerHTML = '<p class="text-gray-500 col-span-2 text-center py-4">No saved texts yet</p>';
+                return;
+            }
+            
+            texts.forEach(text => {
+                const textCard = document.createElement('div');
+                textCard.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 transition cursor-pointer';
+                textCard.innerHTML = `
+                    <h3 class="font-medium text-gray-800 truncate">${text.name}</h3>
+                    <p class="text-sm text-gray-500 mt-1">${new Date(text.date).toLocaleDateString()}</p>
+                    <div class="flex justify-end mt-2">
+                        <button class="text-indigo-600 hover:text-indigo-800 mr-2 view-text-btn" data-name="${text.name}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="text-red-600 hover:text-red-800 delete-text-btn" data-name="${text.name}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                savedTextsList.appendChild(textCard);
+            });
+            
+            // Add event listeners to view buttons
+            document.querySelectorAll('.view-text-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const textName = btn.getAttribute('data-name');
+                    viewText(textName);
+                });
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-text-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const textName = btn.getAttribute('data-name');
+                    deleteText(textName);
+                });
+            });
+            
+            // Add click event to entire card
+            document.querySelectorAll('.bg-gray-50').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Only trigger if not clicking on a button
+                    if (!e.target.closest('button')) {
+                        const textName = card.querySelector('.view-text-btn').getAttribute('data-name');
+                        viewText(textName);
+                    }
+                });
+            });
+        }
+
+        // View a specific text
+        function viewText(name) {
+            const text = texts.find(t => t.name === name);
+            if (!text) return;
+            
+            selectedText = text;
+            currentTextTitle.textContent = text.name;
+            
+            // Process text content to highlight known/forgotten words
+            let processedContent = text.content;
+            
+            // Split into words and wrap each word in a span
+            const words = processedContent.split(/(\s+)/);
+            processedContent = words.map(word => {
+                if (word.trim() === '') return word;
+                
+                const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '').toLowerCase();
+                const status = wordInventory[cleanWord]?.status;
+                
+                let wordClass = '';
+                if (status === 'known') wordClass = 'known';
+                if (status === 'forgotten') wordClass = 'forgotten';
+                
+                return `<span class="word ${wordClass}" data-word="${cleanWord}">${word}<button class="speech-btn ml-1 text-blue-500 hover:text-blue-700" data-word="${cleanWord}"><i class="fas fa-volume-up text-xs"></i></button></span>`;
+            }).join('');
+            
+            textDisplay.innerHTML = processedContent;
+            
+            // Add event listeners to speech buttons
+            document.querySelectorAll('.speech-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const word = btn.getAttribute('data-word');
+                    speakWord(word);
+                });
+            });
+            
+            // Show the text viewer
+            textViewerSection.classList.remove('hidden');
+        }
+
+        // Close text viewer
+        function closeText() {
+            textViewerSection.classList.add('hidden');
+            selectedText = null;
+            clearSelection();
+        }
+
+        // Delete a text
+        function deleteText(name) {
+            if (confirm(`Are you sure you want to delete "${name}"?`)) {
+                texts = texts.filter(text => text.name !== name);
+                localStorage.setItem('englishTexts', JSON.stringify(texts));
+                renderSavedTexts();
+                updateStats();
+                
+                // If the deleted text was currently being viewed, close the viewer
+                if (selectedText && selectedText.name === name) {
+                    closeText();
+                }
+            }
+        }
+
+        // Handle text selection
+        function handleTextSelection() {
+            const selection = window.getSelection();
+            if (selection.toString().trim() === '') {
+                clearSelection();
+                return;
+            }
+            
+            selectedRange = selection.getRangeAt(0);
+            selectedWord = selection.toString().trim().toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+            
+            // Create action buttons
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'word-actions';
+            
+            // Add speech button
+            const speechBtn = document.createElement('button');
+            speechBtn.className = 'text-blue-500 hover:text-blue-700';
+            speechBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            speechBtn.onclick = (e) => {
+                e.stopPropagation();
+                speakWord(selectedWord);
+            };
+            actionsDiv.appendChild(speechBtn);
+            
+            // Add mark buttons based on word status
+            const status = wordInventory[selectedWord]?.status;
+            
+            if (status === 'known') {
+                const forgottenBtn = document.createElement('button');
+                forgottenBtn.className = 'text-orange-500 hover:text-orange-700';
+                forgottenBtn.innerHTML = '<i class="fas fa-exclamation"></i>';
+                forgottenBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    markWord('forgotten');
+                };
+                actionsDiv.appendChild(forgottenBtn);
+            } else {
+                const knownBtn = document.createElement('button');
+                knownBtn.className = 'text-green-500 hover:text-green-700';
+                knownBtn.innerHTML = '<i class="fas fa-check"></i>';
+                knownBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    markWord('known');
+                };
+                actionsDiv.appendChild(knownBtn);
+            }
+            
+            // Add translate button
+            const translateBtn = document.createElement('button');
+            translateBtn.className = 'text-purple-500 hover:text-purple-700';
+            translateBtn.innerHTML = '<i class="fas fa-language"></i>';
+            translateBtn.onclick = (e) => {
+                e.stopPropagation();
+                translateWord();
+            };
+            actionsDiv.appendChild(translateBtn);
+            
+            // Insert actions after selected word
+            const range = selectedRange.cloneRange();
+            range.collapse(false);
+            range.insertNode(actionsDiv);
+            selectedRange.selectNode(actionsDiv);
+        }
+
+        // Clear selection
+        function clearSelection() {
+            // Remove any existing action buttons
+            document.querySelectorAll('.word-actions').forEach(el => el.remove());
+            selectedWord = null;
+            selectedRange = null;
+            translationResult.classList.add('hidden');
+        }
+
+        // Mark word as known or forgotten
+        function markWord(status) {
+            if (!selectedWord) return;
+            
+            // Update word inventory
+            if (!wordInventory[selectedWord]) {
+                wordInventory[selectedWord] = {
+                    count: 0,
+                    status: status,
+                    lastUpdated: new Date().toISOString()
+                };
+            } else {
+                wordInventory[selectedWord].status = status;
+                wordInventory[selectedWord].lastUpdated = new Date().toISOString();
+            }
+            
+            wordInventory[selectedWord].count++;
+            
+            // Save to localStorage
+            localStorage.setItem('wordInventory', JSON.stringify(wordInventory));
+            
+            // Update UI
+            updateStats();
+            renderWordInventory();
+            
+            // Update the displayed text if we're viewing one
+            if (selectedText) {
+                viewText(selectedText.name);
+            }
+            
+            clearSelection();
+        }
+
+        // Translate word
+        function translateWord() {
+            if (!selectedWord) return;
+            
+            // In a real app, you would call a translation API here
+            // For this demo, we'll just show a mock translation
+            const mockTranslations = {
+                'hello': 'hola',
+                'world': 'mundo',
+                'good': 'bueno',
+                'morning': 'mañana',
+                'english': 'inglés',
+                'learning': 'aprendizaje',
+                'practice': 'práctica',
+                'word': 'palabra',
+                'text': 'texto',
+                'save': 'guardar'
+            };
+            
+            const translation = mockTranslations[selectedWord] || `(Translation for "${selectedWord}" would appear here)`;
+            
+            translationResult.textContent = `${selectedWord}: ${translation}`;
+            translationResult.classList.remove('hidden');
+        }
+
+        // Speak word
+        function speakWord(word) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('Speech synthesis not supported in your browser');
+            }
+        }
+
+        // Extract words from text and add to inventory
+        function extractWords(text) {
+            const words = text.toLowerCase().match(/\b[\w']+\b/g) || [];
+            
+            words.forEach(word => {
+                const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+                
+                if (!wordInventory[cleanWord]) {
+                    wordInventory[cleanWord] = {
+                        count: 1,
+                        status: 'new',
+                        firstSeen: new Date().toISOString(),
+                        lastUpdated: new Date().toISOString()
+                    };
+                } else {
+                    wordInventory[cleanWord].count++;
+                }
+            });
+            
+            localStorage.setItem('wordInventory', JSON.stringify(wordInventory));
+            renderWordInventory();
+            updateStats();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const knownWords = Object.values(wordInventory).filter(word => word.status === 'known').length;
+            const forgottenWords = Object.values(wordInventory).filter(word => word.status === 'forgotten').length;
+            const totalWords = Object.keys(wordInventory).length;
+            const totalTexts = texts.length;
+            
+            knownCount.textContent = knownWords;
+            forgottenCount.textContent = forgottenWords;
+            totalCount.textContent = totalWords;
+            textsCount.textContent = totalTexts;
+            
+            const progress = totalWords > 0 ? Math.round((knownWords / totalWords) * 100) : 0;
+            progressBar.style.width = `${progress}%`;
+            progressPercentage.textContent = `${progress}%`;
+        }
+
+        // Render word inventory
+        function renderWordInventory(filter = '') {
+            wordInventoryTable.innerHTML = '';
+            
+            let words = Object.entries(wordInventory);
+            
+            if (filter) {
+                words = words.filter(([word]) => word.includes(filter.toLowerCase()));
+            }
+            
+            if (words.length === 0) {
+                wordInventoryTable.innerHTML = `
+                    <tr>
+                        <td colspan="2" class="px-2 py-4 text-center text-gray-500">No words found</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Sort by most recently updated
+            words.sort((a, b) => new Date(b[1].lastUpdated) - new Date(a[1].lastUpdated));
+            
+            words.forEach(([word, data]) => {
+                const row = document.createElement('tr');
+                
+                let statusClass = '';
+                let statusText = '';
+                
+                if (data.status === 'known') {
+                    statusClass = 'bg-green-100 text-green-800';
+                    statusText = 'Known';
+                } else if (data.status === 'forgotten') {
+                    statusClass = 'bg-orange-100 text-orange-800';
+                    statusText = 'Forgotten';
+                } else {
+                    statusClass = 'bg-gray-100 text-gray-800';
+                    statusText = 'New';
+                }
+                
+                row.innerHTML = `
+                    <td class="px-2 py-2 whitespace-nowrap font-medium">${word}</td>
+                    <td class="px-2 py-2 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full ${statusClass}">${statusText}</span>
+                    </td>
+                `;
+                
+                wordInventoryTable.appendChild(row);
+            });
+        }
+
+        // Search words in inventory
+        function searchWords() {
+            const query = searchWord.value.trim();
+            renderWordInventory(query);
+        }
+
+        // Generate practice list
+        function generatePracticeList() {
+            const count = parseInt(wordCount.value) || 10;
+            
+            // Get words that are not marked as known
+            const practiceWordsList = Object.entries(wordInventory)
+                .filter(([word, data]) => data.status !== 'known')
+                .map(([word]) => word);
+            
+            if (practiceWordsList.length === 0) {
+                practiceWords.innerHTML = '<p class="text-gray-500">All words are marked as known!</p>';
+                practiceList.classList.remove('hidden');
+                return;
+            }
+            
+            // Shuffle and take the requested number
+            const shuffled = [...practiceWordsList].sort(() => 0.5 - Math.random());
+            const selectedWords = shuffled.slice(0, Math.min(count, shuffled.length));
+            
+            // Display the words
+            practiceWords.innerHTML = '';
+            selectedWords.forEach(word => {
+                const wordEl = document.createElement('div');
+                wordEl.className = 'bg-gray-100 px-3 py-2 rounded-lg flex items-center justify-between';
+                wordEl.innerHTML = `
+                    <span>${word}</span>
+                    <div class="flex space-x-1">
+                        <button class="text-green-600 hover:text-green-800 mark-practice-known-btn" data-word="${word}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="text-blue-500 hover:text-blue-700 speak-practice-word-btn" data-word="${word}">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                    </div>
+                `;
+                practiceWords.appendChild(wordEl);
+            });
+            
+            // Add event listeners
+            document.querySelectorAll('.mark-practice-known-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const word = btn.getAttribute('data-word');
+                    markPracticeWordAsKnown(word);
+                });
+            });
+            
+            document.querySelectorAll('.speak-practice-word-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const word = btn.getAttribute('data-word');
+                    speakWord(word);
+                });
+            });
+            
+            practiceList.classList.remove('hidden');
+        }
+
+        // Mark practice word as known
+        function markPracticeWordAsKnown(word) {
+            if (!wordInventory[word]) {
+                wordInventory[word] = {
+                    count: 1,
+                    status: 'known',
+                    firstSeen: new Date().toISOString(),
+                    lastUpdated: new Date().toISOString()
+                };
+            } else {
+                wordInventory[word].status = 'known';
+                wordInventory[word].lastUpdated = new Date().toISOString();
+                wordInventory[word].count++;
+            }
+            
+            localStorage.setItem('wordInventory', JSON.stringify(wordInventory));
+            updateStats();
+            renderWordInventory();
+            
+            // Remove the word from practice list
+            const wordEl = document.querySelector(`.mark-practice-known-btn[data-word="${word}"]`).closest('div');
+            wordEl.remove();
+            
+            // If no words left, show message
+            if (practiceWords.children.length === 0) {
+                practiceWords.innerHTML = '<p class="text-gray-500">All practice words completed!</p>';
+            }
+        }
+
+        // Mark all practice words as known
+        function markAllPracticeWordsAsKnown() {
+            const wordButtons = document.querySelectorAll('.mark-practice-known-btn');
+            wordButtons.forEach(btn => {
+                const word = btn.getAttribute('data-word');
+                markPracticeWordAsKnown(word);
+            });
+        }
+
+        // Shuffle practice words
+        function shufflePracticeWords() {
+            const words = Array.from(practiceWords.children);
+            words.sort(() => 0.5 - Math.random());
+            practiceWords.innerHTML = '';
+            words.forEach(word => practiceWords.appendChild(word));
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
