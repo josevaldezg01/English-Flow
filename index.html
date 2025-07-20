@@ -387,17 +387,37 @@
                 if (status === 'known') wordClass = 'known';
                 if (status === 'forgotten') wordClass = 'forgotten';
                 
-                return `<span class="word ${wordClass}" data-word="${cleanWord}">${word}<button class="speech-btn ml-1 text-blue-500 hover:text-blue-700" data-word="${cleanWord}"><i class="fas fa-volume-up text-xs"></i></button></span>`;
+                return `<span class="word ${wordClass}" data-word="${cleanWord}">${word}
+                    <button class="mark-known-btn ml-1 text-green-500 hover:text-green-700" data-word="${cleanWord}" title="Mark as known"><i class="fas fa-check text-xs"></i></button>
+                    <button class="mark-forgotten-btn ml-1 text-orange-500 hover:text-orange-700" data-word="${cleanWord}" title="Mark as forgotten"><i class="fas fa-exclamation text-xs"></i></button>
+                    <button class="speech-btn ml-1 text-blue-500 hover:text-blue-700" data-word="${cleanWord}" title="Pronounce"><i class="fas fa-volume-up text-xs"></i></button>
+                </span>`;
             }).join('');
             
             textDisplay.innerHTML = processedContent;
             
-            // Add event listeners to speech buttons
+            // Add event listeners to action buttons
             document.querySelectorAll('.speech-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const word = btn.getAttribute('data-word');
                     speakWord(word);
+                });
+            });
+            
+            document.querySelectorAll('.mark-known-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedWord = btn.getAttribute('data-word');
+                    markWord('known');
+                });
+            });
+            
+            document.querySelectorAll('.mark-forgotten-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectedWord = btn.getAttribute('data-word');
+                    markWord('forgotten');
                 });
             });
             
