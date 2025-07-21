@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>English Learning Control</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .word {
@@ -247,6 +247,12 @@
     </div>
 
     <script>
+        // Mostrar el login y ocultar la aplicación al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('loginContainer').style.display = 'flex';
+    init(); // Inicializar eventos del login
+});
         // Data storage
         let texts = JSON.parse(localStorage.getItem(`englishTexts_${currentUser}`)) || [];
         let wordInventory = JSON.parse(localStorage.getItem(`wordInventory_${currentUser}`)) || {};
@@ -345,20 +351,11 @@
         }
 
         // Initialize the login
-        function init() {
-    // Asegurarse que la aplicación está oculta
-    document.querySelector('.container').style.display = 'none';
-    // Mostrar el login
-    document.getElementById('loginContainer').style.display = 'flex';
-    
-    // Configurar evento de login
+    function init() {
+    // Solo configura eventos, la visibilidad se controla en DOMContentLoaded
     document.getElementById('loginBtn').addEventListener('click', handleLogin);
-    
-    // Permitir login con Enter
     document.getElementById('password').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleLogin();
-        }
+        if (e.key === 'Enter') handleLogin();
     });
 }
 
