@@ -291,23 +291,27 @@
         let currentUser = null;
 
         // Handle login
-        function handleLogin() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-            const errorElement = document.getElementById('loginError');
-            
-            if (users[username] && users[username] === password) {
-                currentUser = username;
-                document.getElementById('loginContainer').style.display = 'none';
-                // Initialize the app after successful login
-                initApp();
-            } else {
-                errorElement.classList.remove('hidden');
-                setTimeout(() => {
-                    errorElement.classList.add('hidden');
-                }, 3000);
-            }
-        }
+       function handleLogin() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const errorElement = document.getElementById('loginError');
+    
+    if (users[username] && users[username] === password) {
+        currentUser = username;
+        document.getElementById('loginContainer').style.display = 'none';
+        document.querySelector('.container').style.display = 'block';
+        // Load user data
+        texts = JSON.parse(localStorage.getItem(`englishTexts_${currentUser}`)) || [];
+        wordInventory = JSON.parse(localStorage.getItem(`wordInventory_${currentUser}`)) || {};
+        // Initialize the app
+        initApp();
+    } else {
+        errorElement.classList.remove('hidden');
+        setTimeout(() => {
+            errorElement.classList.add('hidden');
+        }, 3000);
+    }
+}
 
         // Initialize the app after login
         function initApp() {
@@ -517,19 +521,17 @@
 
         // Delete a text
         function deleteText(name) {
-            if (confirm(`Are you sure you want to delete "${name}"?`)) {
-                texts = texts.filter(text => text.name !== name);
-                localStorage.setItem('englishTexts', JSON.stringify(texts));
-                renderSavedTexts();
-                updateStats();
-                
-                // If the deleted text was currently being viewed, close the viewer
-                if (selectedText && selectedText.name === name) {
-                    closeText();
-                }
-            }
+    if (confirm(`Are you sure you want to delete "${name}"?`)) {
+        texts = texts.filter(text => text.name !== name);
+        localStorage.setItem(`englishTexts_${currentUser}`, JSON.stringify(texts)); // Cambiado
+        renderSavedTexts();
+        updateStats();
+        
+        if (selectedText && selectedText.name === name) {
+            closeText();
         }
-
+    }
+}
         // Handle text selection
         function handleTextSelection() {
             const selection = window.getSelection();
@@ -675,27 +677,27 @@
 
         // Extract words from text and add to inventory
         function extractWords(text) {
-            const words = text.toLowerCase().match(/\b[\w']+\b/g) || [];
-            
-            words.forEach(word => {
-                const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
-                
-                if (!wordInventory[cleanWord]) {
-                    wordInventory[cleanWord] = {
-                        count: 1,
-                        status: 'new',
-                        firstSeen: new Date().toISOString(),
-                        lastUpdated: new Date().toISOString()
-                    };
-                } else {
-                    wordInventory[cleanWord].count++;
-                }
-            });
-            
-            localStorage.setItem('wordInventory', JSON.stringify(wordInventory));
-            renderWordInventory();
-            updateStats();
+    const words = text.toLowerCase().match(/\b[\w']+\b/g) || [];
+    
+    words.forEach(word => {
+        const cleanWord = word.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+        
+        if (!wordInventory[cleanWord]) {
+            wordInventory[cleanWord] = {
+                count: 1,
+                status: 'new',
+                firstSeen: new Date().toISOString(),
+                lastUpdated: new Date().toISOString()
+            };
+        } else {
+            wordInventory[cleanWord].count++;
         }
+    });
+    
+    localStorage.setItem(`wordInventory_${currentUser}`, JSON.stringify(wordInventory)); // Cambiado
+    renderWordInventory();
+    updateStats();
+}
 
         // Update statistics
         function updateStats() {
@@ -827,33 +829,31 @@
         }
 
         // Mark practice word as known
-        function markPracticeWordAsKnown(word) {
-            if (!wordInventory[word]) {
-                wordInventory[word] = {
-                    count: 1,
-                    status: 'known',
-                    firstSeen: new Date().toISOString(),
-                    lastUpdated: new Date().toISOString()
-                };
-            } else {
-                wordInventory[word].status = 'known';
-                wordInventory[word].lastUpdated = new Date().toISOString();
-                wordInventory[word].count++;
-            }
-            
-            localStorage.setItem('wordInventory', JSON.stringify(wordInventory));
-            updateStats();
-            renderWordInventory();
-            
-            // Remove the word from practice list
-            const wordEl = document.querySelector(`.mark-practice-known-btn[data-word="${word}"]`).closest('div');
-            wordEl.remove();
-            
-            // If no words left, show message
-            if (practiceWords.children.length === 0) {
-                practiceWords.innerHTML = '<p class="text-gray-500">All practice words completed!</p>';
-            }
-        }
+       function markPracticeWordAsKnown(word) {
+    if (!wordInventory[word]) {
+        wordInventory[word] = {
+            count: 1,
+            status: 'known',
+            firstSeen: new Date().toISOString(),
+            lastUpdated: new Date().toISOString()
+        };
+    } else {
+        wordInventory[word].status = 'known';
+        wordInventory[word].lastUpdated = new Date().toISOString();
+        wordInventory[word].count++;
+    }
+    
+    localStorage.setItem(`wordInventory_${currentUser}`, JSON.stringify(wordInventory)); // Cambiado
+    updateStats();
+    renderWordInventory();
+    
+    const wordEl = document.querySelector(`.mark-practice-known-btn[data-word="${word}"]`).closest('div');
+    wordEl.remove();
+    
+    if (practiceWords.children.length === 0) {
+        practiceWords.innerHTML = '<p class="text-gray-500">All practice words completed!</p>';
+    }
+}
 
         // Mark all practice words as known
         function markAllPracticeWordsAsKnown() {
