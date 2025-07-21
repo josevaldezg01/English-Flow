@@ -92,7 +92,7 @@
             </div>
         </div>
     </div>
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-4 py-8" style="display: none;">
         <header class="mb-10 text-center">
             <h1 class="text-4xl font-bold text-indigo-700 mb-2">English Learning Control</h1>
             <p class="text-lg text-gray-600">Track your English vocabulary progress and practice effectively</p>
@@ -298,12 +298,16 @@
     
     if (users[username] && users[username] === password) {
         currentUser = username;
+        // Ocultar login
         document.getElementById('loginContainer').style.display = 'none';
+        // Mostrar aplicación
         document.querySelector('.container').style.display = 'block';
-        // Load user data
+        
+        // Cargar datos del usuario
         texts = JSON.parse(localStorage.getItem(`englishTexts_${currentUser}`)) || [];
-        wordInventory = JSON.parse(localStorage.getItem(`wordInventory_${currentUser}`)) || {};
-        // Initialize the app
+        wordInventory = JSON.parse(localStorage.getItem(`wordInventory_${currentUser}`)) || [];
+        
+        // Inicializar aplicación
         initApp();
     } else {
         errorElement.classList.remove('hidden');
@@ -312,7 +316,6 @@
         }, 3000);
     }
 }
-
         // Initialize the app after login
         function initApp() {
             renderSavedTexts();
@@ -343,19 +346,21 @@
 
         // Initialize the login
         function init() {
-            // Set up login event listener
-            document.getElementById('loginBtn').addEventListener('click', handleLogin);
-            
-            // Also allow login with Enter key
-            document.getElementById('password').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    handleLogin();
-                }
-            });
-            
-            // Hide main app content until login
-            document.querySelector('.container').style.display = 'none';
+    // Asegurarse que la aplicación está oculta
+    document.querySelector('.container').style.display = 'none';
+    // Mostrar el login
+    document.getElementById('loginContainer').style.display = 'flex';
+    
+    // Configurar evento de login
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    
+    // Permitir login con Enter
+    document.getElementById('password').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleLogin();
         }
+    });
+}
 
         // Save text to storage
         function saveText() {
