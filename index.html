@@ -247,214 +247,217 @@
         </div>
     </div>
 
-    <script>
-        // Mostrar el login y ocultar la aplicación al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelector('.container').style.display = 'none';
-    document.getElementById('loginContainer').style.display = 'flex';
-    init(); // Inicializar eventos del login
-});
-        // Data storage
-        let texts = JSON.parse(localStorage.getItem(`englishTexts_${currentUser}`)) || [];
-        let wordInventory = JSON.parse(localStorage.getItem(`wordInventory_${currentUser}`)) || {};
-        let selectedText = null;
-        let selectedWord = null;
-        let selectedRange = null;
+  <script>
+    // ========== VARIABLES GLOBALES ==========
+    // User data - DEFINIDO PRIMERO
+    const users = {
+        "Jose": "Taliana123",
+        "Taliana": "Taliana123"
+    };
+    let currentUser = null;
 
-        // DOM Elements
-        const saveTextBtn = document.getElementById('saveTextBtn');
-        const textNameInput = document.getElementById('textName');
-        const textInput = document.getElementById('textInput');
-        const savedTextsList = document.getElementById('savedTextsList');
-        const textViewerSection = document.getElementById('textViewerSection');
-        const currentTextTitle = document.getElementById('currentTextTitle');
-        const textDisplay = document.getElementById('textDisplay');
-        const closeTextViewer = document.getElementById('closeTextViewer');
-        const markAsKnown = document.getElementById('markAsKnown');
-        const markAsForgotten = document.getElementById('markAsForgotten');
-        const translateSelection = document.getElementById('translateSelection');
-        const translationResult = document.getElementById('translationResult');
-        const knownCount = document.getElementById('knownCount');
-        const forgottenCount = document.getElementById('forgottenCount');
-        const totalCount = document.getElementById('totalCount');
-        const textsCount = document.getElementById('textsCount');
-        const progressBar = document.getElementById('progressBar');
-        const progressPercentage = document.getElementById('progressPercentage');
-        const wordInventoryTable = document.getElementById('wordInventory');
-        const searchWord = document.getElementById('searchWord');
-        const searchBtn = document.getElementById('searchBtn');
-        const wordCount = document.getElementById('wordCount');
-        const generatePracticeBtn = document.getElementById('generatePracticeBtn');
-        const practiceList = document.getElementById('practiceList');
-        const practiceWords = document.getElementById('practiceWords');
-        const markAllKnown = document.getElementById('markAllKnown');
-        const shufflePractice = document.getElementById('shufflePractice');
+    // Data storage - AHORA currentUser está definido
+    let texts = JSON.parse(localStorage.getItem(`englishTexts_${currentUser}`)) || [];
+    let wordInventory = JSON.parse(localStorage.getItem(`wordInventory_${currentUser}`)) || [];
+    let selectedText = null;
+    let selectedWord = null;
+    let selectedRange = null;
 
-               // User data
-        const users = {
-            "Jose": "Taliana123",
-            "Taliana": "Taliana123"
-        };
-        let currentUser = null;
-
-        // Handle login
-       function handleLogin() {
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value;
-    const errorElement = document.getElementById('loginError');
+    // ========== ELEMENTOS DEL DOM ==========
+    // Login Elements
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+    const loginContainer = document.getElementById('loginContainer');
     
-    if (users[username] && users[username] === password) {
-        currentUser = username;
-        // Ocultar login
-        document.getElementById('loginContainer').style.display = 'none';
-        // Mostrar aplicación
-        document.querySelector('.container').style.display = 'block';
-        
-        // Cargar datos del usuario
-        texts = JSON.parse(localStorage.getItem(`englishTexts_${currentUser}`)) || [];
-        wordInventory = JSON.parse(localStorage.getItem(`wordInventory_${currentUser}`)) || [];
-        
-        // Inicializar aplicación
-        initApp();
-    } else {
-        errorElement.classList.remove('hidden');
-        setTimeout(() => {
-            errorElement.classList.add('hidden');
-        }, 3000);
+    // Main App Elements
+    const appContainer = document.querySelector('.container');
+    const saveTextBtn = document.getElementById('saveTextBtn');
+    const textNameInput = document.getElementById('textName');
+    const textInput = document.getElementById('textInput');
+    const savedTextsList = document.getElementById('savedTextsList');
+    const textViewerSection = document.getElementById('textViewerSection');
+    const currentTextTitle = document.getElementById('currentTextTitle');
+    const textDisplay = document.getElementById('textDisplay');
+    const closeTextViewer = document.getElementById('closeTextViewer');
+    
+    // Word Management Elements
+    const markAsKnown = document.getElementById('markAsKnown');
+    const markAsForgotten = document.getElementById('markAsForgotten');
+    const translateSelection = document.getElementById('translateSelection');
+    const translationResult = document.getElementById('translationResult');
+    
+    // Stats Elements
+    const knownCount = document.getElementById('knownCount');
+    const forgottenCount = document.getElementById('forgottenCount');
+    const totalCount = document.getElementById('totalCount');
+    const textsCount = document.getElementById('textsCount');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercentage = document.getElementById('progressPercentage');
+    
+    // Word Inventory Elements
+    const wordInventoryTable = document.getElementById('wordInventory');
+    const searchWord = document.getElementById('searchWord');
+    const searchBtn = document.getElementById('searchBtn');
+    
+    // Practice Elements
+    const wordCount = document.getElementById('wordCount');
+    const generatePracticeBtn = document.getElementById('generatePracticeBtn');
+    const practiceList = document.getElementById('practiceList');
+    const practiceWords = document.getElementById('practiceWords');
+    const markAllKnown = document.getElementById('markAllKnown');
+    const shufflePractice = document.getElementById('shufflePractice');
+
+    // ========== FUNCIONES DE INICIALIZACIÓN ==========
+    function initLogin() {
+        // Verificar que los elementos existen
+        if (!loginBtn || !passwordInput || !loginContainer || !appContainer) {
+            console.error("Error: Elementos críticos del login no encontrados");
+            return;
+        }
+
+        // Configurar eventos del login
+        loginBtn.addEventListener('click', handleLogin);
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
     }
-}
-        // Initialize the app after login
-        function initApp() {
-            renderSavedTexts();
-            updateStats();
-            renderWordInventory();
-            
-            // Event listeners
-            saveTextBtn.addEventListener('click', saveText);
-            closeTextViewer.addEventListener('click', closeText);
-            markAsKnown.addEventListener('click', () => markWord('known'));
-            markAsForgotten.addEventListener('click', () => markWord('forgotten'));
-            translateSelection.addEventListener('click', translateWord);
-            searchBtn.addEventListener('click', searchWords);
-            generatePracticeBtn.addEventListener('click', generatePracticeList);
-            markAllKnown.addEventListener('click', markAllPracticeWordsAsKnown);
-            shufflePractice.addEventListener('click', shufflePracticeWords);
-            
-            // Text selection handling
-            textDisplay.addEventListener('mouseup', handleTextSelection);
-            
-            // Enable speech synthesis
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.onvoiceschanged = function() {
-                    // Voices loaded
-                };
-            }
-        }
 
-        // Initialize the login
-    function init() {
-    // Solo configura eventos, la visibilidad se controla en DOMContentLoaded
-    document.getElementById('loginBtn').addEventListener('click', handleLogin);
-    document.getElementById('password').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleLogin();
-    });
-}
-
-        // Save text to storage
-        function saveText() {
-            const name = textNameInput.value.trim();
-            const content = textInput.value.trim();
-            
-            if (!name || !content) {
-                alert('Please enter both a name and text content');
-                return;
-            }
-            
-            // Check if name already exists
-            if (texts.some(text => text.name === name)) {
-                alert('A text with this name already exists');
-                return;
-            }
-            
-            const newText = {
-                name,
-                content,
-                date: new Date().toISOString()
+    function initApp() {
+        renderSavedTexts();
+        updateStats();
+        renderWordInventory();
+        
+        // Configurar eventos de la aplicación
+        saveTextBtn.addEventListener('click', saveText);
+        closeTextViewer.addEventListener('click', closeText);
+        markAsKnown.addEventListener('click', () => markWord('known'));
+        markAsForgotten.addEventListener('click', () => markWord('forgotten'));
+        translateSelection.addEventListener('click', translateWord);
+        searchBtn.addEventListener('click', searchWords);
+        generatePracticeBtn.addEventListener('click', generatePracticeList);
+        markAllKnown.addEventListener('click', markAllPracticeWordsAsKnown);
+        shufflePractice.addEventListener('click', shufflePracticeWords);
+        textDisplay.addEventListener('mouseup', handleTextSelection);
+        
+        // Habilitar síntesis de voz si está disponible
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = function() {
+                // Voces cargadas
             };
-            
-            texts.push(newText);
-            localStorage.setItem(`englishTexts_${currentUser}`, JSON.stringify(texts));
-            
-            // Clear inputs
-            textNameInput.value = '';
-            textInput.value = '';
-            
-            // Update UI
-            renderSavedTexts();
-            updateStats();
-            
-            // Extract words and add to inventory
-            extractWords(content);
         }
+    }
 
-        // Render saved texts list
-        function renderSavedTexts() {
-            savedTextsList.innerHTML = '';
+    // ========== FUNCIONES PRINCIPALES ==========
+    function handleLogin() {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+        
+        if (users[username] && users[username] === password) {
+            currentUser = username;
+            // Ocultar login y mostrar aplicación
+            loginContainer.style.display = 'none';
+            appContainer.style.display = 'block';
             
-            if (texts.length === 0) {
-                savedTextsList.innerHTML = '<p class="text-gray-500 col-span-2 text-center py-4">No saved texts yet</p>';
-                return;
-            }
+            // Cargar datos del usuario
+            texts = JSON.parse(localStorage.getItem(`englishTexts_${currentUser}`)) || [];
+            wordInventory = JSON.parse(localStorage.getItem(`wordInventory_${currentUser}`)) || [];
             
-            texts.forEach(text => {
-                const textCard = document.createElement('div');
-                textCard.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 transition cursor-pointer';
-                textCard.innerHTML = `
-                    <h3 class="font-medium text-gray-800 truncate">${text.name}</h3>
-                    <p class="text-sm text-gray-500 mt-1">${new Date(text.date).toLocaleDateString()}</p>
-                    <div class="flex justify-end mt-2">
-                        <button class="text-indigo-600 hover:text-indigo-800 mr-2 view-text-btn" data-name="${text.name}">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="text-red-600 hover:text-red-800 delete-text-btn" data-name="${text.name}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `;
-                savedTextsList.appendChild(textCard);
-            });
-            
-            // Add event listeners to view buttons
-            document.querySelectorAll('.view-text-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const textName = btn.getAttribute('data-name');
-                    viewText(textName);
-                });
-            });
-            
-            // Add event listeners to delete buttons
-            document.querySelectorAll('.delete-text-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const textName = btn.getAttribute('data-name');
-                    deleteText(textName);
-                });
-            });
-            
-            // Add click event to entire card
-            document.querySelectorAll('.bg-gray-50').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    // Only trigger if not clicking on a button
-                    if (!e.target.closest('button')) {
-                        const textName = card.querySelector('.view-text-btn').getAttribute('data-name');
-                        viewText(textName);
-                    }
-                });
-            });
+            // Inicializar aplicación
+            initApp();
+        } else {
+            loginError.classList.remove('hidden');
+            setTimeout(() => {
+                loginError.classList.add('hidden');
+            }, 3000);
         }
+    }
 
-        // View a specific text
+    // ========== FUNCIONES DE GESTIÓN DE TEXTO ==========
+    function saveText() {
+        const name = textNameInput.value.trim();
+        const content = textInput.value.trim();
+        
+        if (!name || !content) {
+            alert('Please enter both a name and text content');
+            return;
+        }
+        
+        if (texts.some(text => text.name === name)) {
+            alert('A text with this name already exists');
+            return;
+        }
+        
+        const newText = {
+            name,
+            content,
+            date: new Date().toISOString()
+        };
+        
+        texts.push(newText);
+        localStorage.setItem(`englishTexts_${currentUser}`, JSON.stringify(texts));
+        
+        textNameInput.value = '';
+        textInput.value = '';
+        
+        renderSavedTexts();
+        updateStats();
+        extractWords(content);
+    }
+
+    function renderSavedTexts() {
+        savedTextsList.innerHTML = '';
+        
+        if (texts.length === 0) {
+            savedTextsList.innerHTML = '<p class="text-gray-500 col-span-2 text-center py-4">No saved texts yet</p>';
+            return;
+        }
+        
+        texts.forEach(text => {
+            const textCard = document.createElement('div');
+            textCard.className = 'bg-gray-50 p-3 rounded-lg border border-gray-200 hover:border-indigo-300 transition cursor-pointer';
+            textCard.innerHTML = `
+                <h3 class="font-medium text-gray-800 truncate">${text.name}</h3>
+                <p class="text-sm text-gray-500 mt-1">${new Date(text.date).toLocaleDateString()}</p>
+                <div class="flex justify-end mt-2">
+                    <button class="text-indigo-600 hover:text-indigo-800 mr-2 view-text-btn" data-name="${text.name}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="text-red-600 hover:text-red-800 delete-text-btn" data-name="${text.name}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            savedTextsList.appendChild(textCard);
+        });
+        
+        // Configurar eventos para los botones
+        document.querySelectorAll('.view-text-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                viewText(btn.getAttribute('data-name'));
+            });
+        });
+        
+        document.querySelectorAll('.delete-text-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteText(btn.getAttribute('data-name'));
+            });
+        });
+        
+        document.querySelectorAll('.bg-gray-50').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    viewText(card.querySelector('.view-text-btn').getAttribute('data-name'));
+                }
+            });
+        });
+    }
+
+    // ... (Todas tus otras funciones se mantienen IGUAL, solo asegúrate de que estén después de las declaraciones iniciales)
+    //// View a specific text
         function viewText(name) {
             const text = texts.find(t => t.name === name);
             if (!text) return;
@@ -877,6 +880,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Initialize the app when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
-    </script>
+
+    // ========== INICIALIZACIÓN FINAL ==========
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Ocultar aplicación y mostrar login
+        if (appContainer) appContainer.style.display = 'none';
+        if (loginContainer) loginContainer.style.display = 'flex';
+        
+        // 2. Inicializar sistema de login
+        initLogin();
+        
+        // 3. Verificar en consola que todo esté correcto
+        console.log("Elementos críticos:", {
+            loginContainer,
+            appContainer,
+            loginBtn,
+            passwordInput
+        });
+    });
+</script>
 </body>
 </html>
